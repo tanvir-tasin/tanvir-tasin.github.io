@@ -1,150 +1,215 @@
-import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
-
-// --- 1. WebGL Background Animation ---
-const container = document.getElementById('canvas-container');
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-camera.position.z = 120;
-
-const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-container.appendChild(renderer.domElement);
-
-const particleCount = 1500;
-const geometry = new THREE.BufferGeometry();
-
-const positions = new Float32Array(particleCount * 2 * 3);
-const speeds = new Float32Array(particleCount * 2);
-const lengths = new Float32Array(particleCount * 2);
-const opacities = new Float32Array(particleCount * 2);
-const vertexTypes = new Float32Array(particleCount * 2);
-
-const spreadX = 400;
-const spreadY = 300;
-const spreadZ = 50; 
-
-for (let i = 0; i < particleCount; i++) {
-    const x = (Math.random() - 0.5) * spreadX;
-    const y = Math.random() * spreadY;
-    const z = (Math.random() - 0.5) * spreadZ;
-
-    const speed = Math.random() * 30 + 15; 
-    const length = Math.random() * 40 + 10;
-    const opacity = Math.random() * 0.3 + 0.1;
-
-    const index = i * 2;
-
-    positions[index * 3] = x;
-    positions[index * 3 + 1] = y;
-    positions[index * 3 + 2] = z;
-    speeds[index] = speed;
-    lengths[index] = length;
-    opacities[index] = opacity;
-    vertexTypes[index] = 0.0; 
-
-    positions[(index + 1) * 3] = x;
-    positions[(index + 1) * 3 + 1] = y;
-    positions[(index + 1) * 3 + 2] = z;
-    speeds[index + 1] = speed;
-    lengths[index + 1] = length;
-    opacities[index + 1] = opacity;
-    vertexTypes[index + 1] = 1.0; 
+/* Reset and Base Styles */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: #0d0d1a;
+  color: #ffffff;
+  scroll-behavior: smooth;
 }
 
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-geometry.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
-geometry.setAttribute('aLength', new THREE.BufferAttribute(lengths, 1));
-geometry.setAttribute('aOpacity', new THREE.BufferAttribute(opacities, 1));
-geometry.setAttribute('aVertexType', new THREE.BufferAttribute(vertexTypes, 1));
-
-const material = new THREE.ShaderMaterial({
-    uniforms: {
-        uTime: { value: 0.0 },
-        uHeight: { value: spreadY }
-    },
-    vertexShader: `
-        uniform float uTime;
-        uniform float uHeight;
-        
-        attribute float aSpeed;
-        attribute float aLength;
-        attribute float aOpacity;
-        attribute float aVertexType;
-        
-        varying float vAlpha;
-        
-        void main() {
-            float yOffset = mod(position.y - (uTime * aSpeed), uHeight);
-            float currentY = yOffset - (uHeight / 2.0);
-            
-            if (aVertexType == 0.0) {
-                currentY += aLength;
-                vAlpha = 0.0;
-            } else {
-                vAlpha = aOpacity;
-            }
-            
-            vec3 newPosition = vec3(position.x, currentY, position.z);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-        }
-    `,
-    fragmentShader: `
-        varying float vAlpha;
-        void main() {
-            gl_FragColor = vec4(1.0, 1.0, 1.0, vAlpha);
-        }
-    `,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending 
-});
-
-const lines = new THREE.LineSegments(geometry, material);
-scene.add(lines);
-
-const clock = new THREE.Clock();
-
-function animate() {
-    requestAnimationFrame(animate);
-    material.uniforms.uTime.value = clock.getElapsedTime();
-    lines.rotation.y = Math.sin(clock.getElapsedTime() * 0.1) * 0.05;
-    renderer.render(scene, camera);
+/* Fixed WebGL Background */
+#canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background: linear-gradient(100deg, #e31837 0%, #7c1a8e 45%, #1a156c 80%, #151152 100%);
 }
-animate();
 
-window.addEventListener('resize', () => {
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-});
+#canvas-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
 
+/* Navigation Bar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5%;
+  box-sizing: border-box;
+  z-index: 10;
+  background: rgba(13, 13, 26, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-// --- 2. Image Upload Logic for Achievements Gallery ---
-const imageUpload = document.getElementById('imageUpload');
-const galleryGrid = document.getElementById('galleryGrid');
+.logo {
+  font-weight: bold;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 16px;
+}
 
-imageUpload.addEventListener('change', function(event) {
-    const files = event.target.files;
-    
-    // Loop through all selected files
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        
-        // Ensure the file is an image
-        if (file.type.match('image.*')) {
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                // Create a new image element and add it to the grid
-                const imgElement = document.createElement('img');
-                imgElement.src = e.target.result;
-                galleryGrid.appendChild(imgElement);
-            };
-            
-            // Read the image file as a data URL
-            reader.readAsDataURL(file);
-        }
-    }
-});
+.nav-links {
+  display: none; /* Hide on very small screens */
+}
+
+@media (min-width: 768px) {
+  .nav-links {
+    display: flex;
+  }
+}
+
+.nav-links a {
+  color: #ffffff;
+  text-decoration: none;
+  margin: 0 15px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+}
+
+.nav-btn {
+  border: 1px solid #df2b4c;
+  padding: 8px 16px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+.nav-btn:hover {
+  background: rgba(223, 43, 76, 0.2);
+}
+
+/* Content Layout */
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 120px 20px 50px 20px;
+}
+
+/* Typography & Sections */
+.hero-section {
+  margin-bottom: 80px;
+}
+
+h1 {
+  font-size: 4rem;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.dot {
+  color: #df2b4c;
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  color: #e2e8f0;
+  margin-bottom: 15px;
+}
+
+.contact-info {
+  font-size: 0.9rem;
+  color: #a0aec0;
+}
+
+.cv-section {
+  background: rgba(20, 20, 40, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 40px;
+  border-radius: 12px;
+  margin-bottom: 40px;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-top: 0;
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+h3 {
+  color: #df2b4c;
+  margin-bottom: 5px;
+}
+
+p {
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.item {
+  margin-bottom: 25px;
+}
+
+.highlight {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.split-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.half {
+  flex: 1;
+  min-width: 300px;
+}
+
+.skills-list {
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Upload Section & Gallery */
+.upload-section {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.upload-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #df2b4c;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-top: 10px;
+  transition: background 0.3s;
+}
+
+.upload-btn:hover {
+  background-color: #c42240;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.gallery-grid img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
