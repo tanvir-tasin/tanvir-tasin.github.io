@@ -32,7 +32,7 @@ for (let i = 0; i < particleCount; i++) {
     const y = Math.random() * spreadY;
     const z = (Math.random() - 0.5) * spreadZ;
 
-    const speed = Math.random() * 40 + 30; // Animation speed
+    const speed = Math.random() * 50 + 30; // Animation speed
     const length = Math.random() * 40 + 10; // Length of the trail
     const opacity = Math.random() * 0.3 + 0.1; // Base brightness
 
