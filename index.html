@@ -1,121 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Md. Tanvirul Islam Tasin | Portfolio</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+const canvas = document.getElementById('lightCanvas');
+const ctx = canvas.getContext('2d', { alpha: false }); // Optimize performance
 
-  <!-- WebGL Background -->
-  <div id="canvas-container"></div>
+let width, height;
+let lines = [];
 
-  <!-- Navigation Bar -->
-  <header class="navbar">
-    <div class="logo">
-      <span style="color: #df2b4c; font-size: 24px; font-weight: bold;">^</span> TAJ
-    </div>
-    <nav class="nav-links">
-      <a href="#about">About</a>
-      <a href="#skills">Skills</a>
-      <a href="#projects">Projects</a>
-      <a href="#research">Research</a>
-      <a href="#achievements">Achievements</a>
-    </nav>
-    <a href="https://github.com/tanvir-tasin" target="_blank" class="nav-btn">GitHub</a>
-  </header>
+function resizeCanvas() {
+  width = canvas.offsetWidth;
+  height = canvas.offsetHeight;
+  canvas.width = width;
+  canvas.height = height;
+}
 
-  <!-- Main Scrollable Content -->
-  <main class="content-wrapper">
-    
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <h1>Md. Tanvirul Islam <br>Tasin <span class="dot">(Taj)</span></h1>
-      <p class="subtitle">Computer Science Undergraduate & Aspiring AI Engineer</p>
-      <div class="contact-info">
-        <span>tanvirtasinofficial@gmail.com</span> | <span>01518987530</span>
-      </div>
-    </section>
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-    <!-- Professional Summary -->
-    <section id="about" class="cv-section">
-      <h2>Professional Summary<span class="dot">.</span></h2>
-      <p>Computer Science and Engineering undergraduate at United International University and aspiring AI Engineer with a strong focus on Machine Learning and Artificial Intelligence. Currently conducting research in Natural Language Processing (NLP) while bringing experience in building custom neural network architectures from scratch using foundational mathematics. Proven leadership and problem-solving skills demonstrated through active campus ambassador roles and competitive hackathon achievements. Aspiring to pursue international post-graduate studies and contribute to advanced AI/ML methodologies.</p>
-    </section>
+// Configuration tuned to match the video's motion
+const config = {
+  lineCount: 800, // Massive increase in density
+  minLength: 150,
+  maxLength: 500, // Longer trails
+  minSpeed: 6,
+  maxSpeed: 18,   // Faster falling motion
+  baseOpacity: 0.15
+};
 
-    <!-- Education & Skills -->
-    <section id="skills" class="cv-section split-section">
-      <div class="half">
-        <h2>Education<span class="dot">.</span></h2>
-        <div class="item">
-          <h3>United International University (UIU)</h3>
-          <p>B.Sc. in Computer Science and Engineering</p>
-          <p class="highlight">CGPA: 3.59/4.00 (Targeting 3.70+)</p>
-        </div>
-        <div class="item">
-          <h3>Saidpur Govt. Science College</h3>
-          <p>HSC (2019-2021) | GPA: 5.00</p>
-        </div>
-      </div>
-      
-      <div class="half">
-        <h2>Technical Skills<span class="dot">.</span></h2>
-        <ul class="skills-list">
-          <li><strong>Languages:</strong> Python, Bash/Shell, HTML, CSS</li>
-          <li><strong>Core CS & AI:</strong> NLP, Machine Learning, Custom Neural Networks, Algorithmic Optimization</li>
-          <li><strong>Tools & Platforms:</strong> Figma, Linux (Ubuntu), Git, GitHub</li>
-          <li><strong>Soft Skills:</strong> Team Leadership, Project Planning, Problem Solving</li>
-        </ul>
-      </div>
-    </section>
+class LightLine {
+  constructor() {
+    this.reset(true);
+  }
 
-    <!-- Projects & Research -->
-    <section id="projects" class="cv-section">
-      <h2>Projects & Research<span class="dot">.</span></h2>
-      
-      <div class="item">
-        <h3>Solo Undergraduate Research (Machine Learning & NLP)</h3>
-        <p>Organizing and authoring an independent empirical machine learning research paper analyzing the reliability and performance differences of second-order optimization strategies and curvature systems compared to standard gradient methods for clinical diagnostics.</p>
-      </div>
+  reset(randomizeY = false) {
+    this.x = Math.random() * width;
+    // If randomizing Y, spawn anywhere. Otherwise, spawn at the top.
+    this.y = randomizeY ? Math.random() * height : -config.maxLength;
+    this.length = Math.random() * (config.maxLength - config.minLength) + config.minLength;
+    this.speed = Math.random() * (config.maxSpeed - config.minSpeed) + config.minSpeed;
+    this.opacity = Math.random() * config.baseOpacity + 0.05;
+    this.width = Math.random() * 1.2 + 0.3; // Very thin lines
+  }
 
-      <div class="item">
-        <h3>Household Waste Management System (Vangari Bhai)</h3>
-        <p>Engineered the UI/UX conceptual platform to optimize local waste recovery collection networks using Figma. Mapped out comprehensive frontend mobile and web layouts, utilizing precise framing structures, responsive layer nested parameters, and batch-resizing controls alongside the "Bootstrap" academic team.</p>
-      </div>
+  update() {
+    this.y += this.speed;
+    // Reset when the entire line has fallen past the bottom of the screen
+    if (this.y - this.length > height) {
+      this.reset();
+    }
+  }
 
-      <div class="item">
-        <h3>Embedded Physical Computing System</h3>
-        <p>Developed a live embedded physical computing project utilizing a Raspberry Pi 5. Conducted hardware diagnostics and device-level troubleshooting via terminal utilities to resolve active fan signal cycles and system interfaces.</p>
-      </div>
-    </section>
+  draw(ctx) {
+    // Gradient creates the fading trail effect
+    let gradient = ctx.createLinearGradient(this.x, this.y - this.length, this.x, this.y);
+    gradient.addColorStop(0, `rgba(255, 255, 255, 0)`);
+    gradient.addColorStop(1, `rgba(255, 255, 255, ${this.opacity})`);
 
-    <!-- Achievements & Gallery -->
-    <section id="achievements" class="cv-section">
-      <h2>Awards & Achievements<span class="dot">.</span></h2>
-      <ul class="skills-list">
-        <li><strong>Finalist:</strong> Code Samurai Inter-University Hackathon (Dhaka University, 2024)</li>
-        <li><strong>2nd Runner Up:</strong> GemmaHackathon UIU</li>
-        <li><strong>1st Runner Up:</strong> Lead Academy Presentation Contest</li>
-        <li><strong>Winner:</strong> "Life at UIU-2024" Photography Contest</li>
-      </ul>
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - this.length);
+    ctx.lineTo(this.x, this.y);
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = this.width;
+    ctx.stroke();
+  }
+}
 
-      <!-- Picture Upload Section -->
-      <div class="upload-section">
-        <h3>Achievement Gallery</h3>
-        <p>Select images to showcase your awards and hackathon experiences locally.</p>
-        
-        <label for="imageUpload" class="upload-btn">Upload Pictures</label>
-        <input type="file" id="imageUpload" accept="image/*" multiple style="display: none;">
-        
-        <div class="gallery-grid" id="galleryGrid">
-          <!-- Uploaded images will appear here -->
-        </div>
-      </div>
-    </section>
-    
-  </main>
+function initLines() {
+  lines = [];
+  for (let i = 0; i < config.lineCount; i++) {
+    lines.push(new LightLine());
+  }
+}
 
-  <script type="module" src="script.js"></script>
-</body>
-</html>
+initLines();
+
+function animate() {
+  // Clear the canvas. The CSS background shows through because we don't fill a solid color here.
+  ctx.clearRect(0, 0, width, height);
+
+  for (let i = 0; i < lines.length; i++) {
+    lines[i].update();
+    lines[i].draw(ctx);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+animate();
