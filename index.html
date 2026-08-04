@@ -1,86 +1,42 @@
-const canvas = document.getElementById('lightCanvas');
-const ctx = canvas.getContext('2d', { alpha: false }); // Optimize performance
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acme AI Clone</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-let width, height;
-let lines = [];
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="logo">
+      <span style="color: #df2b4c; font-size: 24px; font-weight: bold;">^</span> ACME
+    </div>
+    <nav class="nav-links">
+      <a href="#">Home</a>
+      <a href="#">DataWorks</a>
+      <a href="#">Remote Teams</a>
+      <a href="#">Build Systems</a>
+      <a href="#">Whitepapers</a>
+      <a href="#">About</a>
+    </nav>
+    <a href="#" class="nav-btn">Get Started</a>
+  </header>
 
-function resizeCanvas() {
-  width = canvas.offsetWidth;
-  height = canvas.offsetHeight;
-  canvas.width = width;
-  canvas.height = height;
-}
+  <!-- Hero Section -->
+  <section class="hero-container">
+    <!-- The 2D Canvas element your script is looking for -->
+    <canvas id="lightCanvas"></canvas>
+    
+    <div class="hero-content">
+      <h1>Hypercharge,<br>thinking machines<span class="dot">.</span></h1>
+      <p>Looking for fully-managed AI data processing services, custom solution development, or building a team of expert resources for your frontier technology endeavours?</p>
+      <a href="#" class="cta-button">SHARE YOUR REQUIREMENTS</a>
+    </div>
+  </section>
 
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-// Configuration tuned to match the video's motion
-const config = {
-  lineCount: 800, // Massive increase in density
-  minLength: 150,
-  maxLength: 500, // Longer trails
-  minSpeed: 6,
-  maxSpeed: 18,   // Faster falling motion
-  baseOpacity: 0.15
-};
-
-class LightLine {
-  constructor() {
-    this.reset(true);
-  }
-
-  reset(randomizeY = false) {
-    this.x = Math.random() * width;
-    // If randomizing Y, spawn anywhere. Otherwise, spawn at the top.
-    this.y = randomizeY ? Math.random() * height : -config.maxLength;
-    this.length = Math.random() * (config.maxLength - config.minLength) + config.minLength;
-    this.speed = Math.random() * (config.maxSpeed - config.minSpeed) + config.minSpeed;
-    this.opacity = Math.random() * config.baseOpacity + 0.05;
-    this.width = Math.random() * 1.2 + 0.3; // Very thin lines
-  }
-
-  update() {
-    this.y += this.speed;
-    // Reset when the entire line has fallen past the bottom of the screen
-    if (this.y - this.length > height) {
-      this.reset();
-    }
-  }
-
-  draw(ctx) {
-    // Gradient creates the fading trail effect
-    let gradient = ctx.createLinearGradient(this.x, this.y - this.length, this.x, this.y);
-    gradient.addColorStop(0, `rgba(255, 255, 255, 0)`);
-    gradient.addColorStop(1, `rgba(255, 255, 255, ${this.opacity})`);
-
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y - this.length);
-    ctx.lineTo(this.x, this.y);
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = this.width;
-    ctx.stroke();
-  }
-}
-
-function initLines() {
-  lines = [];
-  for (let i = 0; i < config.lineCount; i++) {
-    lines.push(new LightLine());
-  }
-}
-
-initLines();
-
-function animate() {
-  // Clear the canvas. The CSS background shows through because we don't fill a solid color here.
-  ctx.clearRect(0, 0, width, height);
-
-  for (let i = 0; i < lines.length; i++) {
-    lines[i].update();
-    lines[i].draw(ctx);
-  }
-
-  requestAnimationFrame(animate);
-}
-
-animate();
+  <!-- Standard script tag -->
+  <script src="script.js"></script>
+</body>
+</html>
